@@ -88,21 +88,13 @@ int main(int argc, char *argv[]) {
     state = vad(vad_data, buffer/*, alpha1*/);
     if (verbose & DEBUG_VAD) vad_show_state(vad_data, stdout);
 
-    if(last_state == ST_INIT && state != ST_INIT){
-      // vad_data->k0 /= N_INIT;
-      // vad_data->k1 = vad_data->k0 + 10;
-      last_state = state;
-    }
 
     if((state == ST_MAYBE_SILENCE || state == ST_MAYBE_VOICE) && (last_state == ST_SILENCE || last_state == ST_VOICE)){  // pass to a maybe
       pre_maybe_state = last_state;
       maybe_t = t;
-      // printf("we change the states\n");
     }
-      // printf("Pre if: pre_maybe: %s, last_state: %s, state: %s\n", state2str(pre_maybe_state), state2str(last_state), state2str(state));
 
     if((state == ST_SILENCE || state == ST_VOICE) && (last_state == ST_MAYBE_SILENCE || last_state == ST_MAYBE_VOICE)){ // decide the state of the maybe
-      // printf("pre_maybe: %s, last_state: %s, state: %s\n", state2str(pre_maybe_state), state2str(last_state), state2str(state));
       if(pre_maybe_state != state){
         fprintf(vadfile, "%.5f\t%.5f\t%s\n", last_t * frame_duration, maybe_t * frame_duration, state2str(pre_maybe_state));
         last_t = maybe_t;
