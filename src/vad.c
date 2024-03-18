@@ -64,8 +64,8 @@ VAD_DATA * vad_open(float rate) {
   vad_data->state = ST_INIT;
   vad_data->sampling_rate = rate;
   vad_data->frame_length = rate * FRAME_TIME * 1e-3;
-  vad_data->min_s = 10;
-  vad_data->min_v = 10;
+  vad_data->min_s = 14;
+  vad_data->min_v = 5;
   return vad_data;
 }
 
@@ -102,7 +102,7 @@ VAD_STATE vad(VAD_DATA *vad_data, float *x/*, float alpha1*/) {
   switch (vad_data->state) {
   case ST_INIT:
     vad_data->k0 = f.p;
-    vad_data->k1 = vad_data->k0 + 6.6;
+    vad_data->k1 = vad_data->k0 + 9.9;
     vad_data->state = ST_SILENCE;
 
   case ST_SILENCE:
@@ -127,17 +127,17 @@ VAD_STATE vad(VAD_DATA *vad_data, float *x/*, float alpha1*/) {
   case ST_MAYBE_VOICE:
     if (f.p > vad_data->k1 && long_state > vad_data->min_v)
       vad_data->state = ST_VOICE;
-    else if (f.p < vad_data->k1)
+    else if (f.p < vad_data->k1-5.9)
       vad_data->state = ST_SILENCE;
     break;
 
   case ST_VOICE:
-    if (f.p < vad_data->k1-3)
+    if (f.p < vad_data->k1-5.9)
       vad_data->state = ST_MAYBE_SILENCE;
     break;
 
   case ST_MAYBE_SILENCE:
-    if (f.p < vad_data->k1-3 && long_state > vad_data->min_s)
+    if (f.p < vad_data->k1-5.9 && long_state > vad_data->min_s)
       vad_data->state = ST_SILENCE;
     else if (f.p > vad_data->k1)
       vad_data->state = ST_VOICE;
