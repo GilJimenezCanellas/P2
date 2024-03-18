@@ -7,6 +7,7 @@
 
 const float FRAME_TIME = 10.0F; /* in ms. */
 unsigned int long_state = 0;
+int initial = 0;
 
 /* 
  * As the output state is only ST_VOICE, ST_SILENCE, or ST_UNDEF,
@@ -15,7 +16,7 @@ unsigned int long_state = 0;
  */
 
 const char *state_str[] = {
-  "UNDEF", "S", "V", "INIT", "Maybe_S", "Maybe_V"
+  "UNDEF", "S", "V", "INIT", "MS", "MV"
 };
 
 const char *state2str(VAD_STATE st) {
@@ -63,8 +64,8 @@ VAD_DATA * vad_open(float rate) {
   vad_data->state = ST_INIT;
   vad_data->sampling_rate = rate;
   vad_data->frame_length = rate * FRAME_TIME * 1e-3;
-  vad_data->min_s = 2;
-  vad_data->min_v = 2;
+  vad_data->min_s = 10;
+  vad_data->min_v = 10;
   return vad_data;
 }
 
@@ -105,13 +106,25 @@ VAD_STATE vad(VAD_DATA *vad_data, float *x/*, float alpha1*/) {
     vad_data->state = ST_SILENCE;
 
   case ST_SILENCE:
-    // printf("ST_SILENCE\n");
+    // if (long_state < 5 && initial == 0) {
+    //   vad_data->k0 += f.p;
+    //   if (long_state == 4) {
+    //     vad_data->k0 /= 5;
+    //     vad_data->k1 = vad_data->k0 + 5;
+    //     initial = 1;
+    //   }
+    // } 
     if (f.p > vad_data->k1)
       vad_data->state = ST_MAYBE_VOICE;
+      // if (initial == 0) {
+      //   vad_data->k0 /= long_state+1;
+      //   vad_data->k1 = vad_data->k0 + 5;
+      //   initial = 1;
+      // }
+      
     break;
 
   case ST_MAYBE_VOICE:
-    // printf("ST_MAYBE_VOICE\n");
     if (f.p > vad_data->k1 && long_state > vad_data->min_v)
       vad_data->state = ST_VOICE;
     else if (f.p < vad_data->k1)
@@ -126,7 +139,7 @@ VAD_STATE vad(VAD_DATA *vad_data, float *x/*, float alpha1*/) {
 
   case ST_MAYBE_SILENCE:
     // printf("ST_MAYBE_SILENCE\n");
-    if ( f.p < vad_data->k1 && long_state > vad_data->min_s)
+    if (f.p < vad_data->k1 && long_state > vad_data->min_s)
       vad_data->state = ST_SILENCE;
     else if (f.p > vad_data->k1)
       vad_data->state = ST_VOICE;
@@ -137,7 +150,7 @@ VAD_STATE vad(VAD_DATA *vad_data, float *x/*, float alpha1*/) {
   }
 
   if(actual_state != vad_data->state){
-    long_state = 0;
+    long_state = 1;
   } else {
     long_state++;
   }

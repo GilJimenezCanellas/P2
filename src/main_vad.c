@@ -86,7 +86,6 @@ int main(int argc, char *argv[]) {
     }
 
     state = vad(vad_data, buffer/*, alpha1*/);
-    printf("%s\n", state2str(state));
     if (verbose & DEBUG_VAD) vad_show_state(vad_data, stdout);
 
     if(last_state == ST_INIT && state != ST_INIT){
@@ -95,7 +94,7 @@ int main(int argc, char *argv[]) {
       last_state = state;
     }
 
-    if(state == (ST_MAYBE_SILENCE || ST_MAYBE_VOICE) && last_state == (ST_SILENCE || ST_VOICE)){  // pass to a maybe
+    if((state == ST_MAYBE_SILENCE || state == ST_MAYBE_VOICE) && (last_state == ST_SILENCE || last_state == ST_VOICE)){  // pass to a maybe
       pre_maybe_state = last_state;
       maybe_t = t;
       // printf("we change the states\n");
@@ -106,9 +105,6 @@ int main(int argc, char *argv[]) {
       // printf("pre_maybe: %s, last_state: %s, state: %s\n", state2str(pre_maybe_state), state2str(last_state), state2str(state));
       if(pre_maybe_state != state){
         fprintf(vadfile, "%.5f\t%.5f\t%s\n", last_t * frame_duration, maybe_t * frame_duration, state2str(pre_maybe_state));
-        printf("%.5f\t%.5f\t%s\n", last_t * frame_duration, maybe_t * frame_duration, state2str(pre_maybe_state));
-        printf("%s\n", state2str(state));
-        printf("%s\n", state2str(pre_maybe_state));
         last_t = maybe_t;
       }
     }
@@ -139,9 +135,11 @@ int main(int argc, char *argv[]) {
 
   state = vad_close(vad_data);
   /* TODO: what do you want to print, for last frames? */
-  if (t != last_t)
+  if (t != last_t) {
+    if (state == ST_MAYBE_SILENCE) state = ST_VOICE;
+    else if (state == ST_MAYBE_VOICE) state = ST_SILENCE;
     fprintf(vadfile, "%.5f\t%.5f\t%s\n", last_t * frame_duration, t * frame_duration + n_read / (float) sf_info.samplerate, state2str(state));
-
+  }
   /* clean up: free memory, close open files */
   free(buffer);
   free(buffer_zeros);
