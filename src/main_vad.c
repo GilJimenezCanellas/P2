@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  vad_data = vad_open(sf_info.samplerate);
+  vad_data = vad_open(sf_info.samplerate, alpha1);
   /* Allocate memory for buffers */
   frame_size   = vad_frame_size(vad_data);
   buffer       = (float *) malloc(frame_size * sizeof(float));
@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
       sf_write_float(sndfile_out, buffer, frame_size);
     }
 
-    state = vad(vad_data, buffer/*, alpha1*/);
+    state = vad(vad_data, buffer, alpha1);
     if (verbose & DEBUG_VAD) vad_show_state(vad_data, stdout);
 
 

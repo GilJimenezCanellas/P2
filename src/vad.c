@@ -7,7 +7,7 @@
 
 const float FRAME_TIME = 10.0F; /* in ms. */
 unsigned int long_state = 0;
-int initial = 0;
+int n = 0;
 
 /* 
  * As the output state is only ST_VOICE, ST_SILENCE, or ST_UNDEF,
@@ -55,7 +55,7 @@ Features compute_features(const float *x, int N, const float sampling_rate) {
  * TODO: Init the values of vad_data
  */
 
-VAD_DATA * vad_open(float rate) {
+VAD_DATA * vad_open(float rate, float alpha1) {
   VAD_DATA *vad_data = malloc(sizeof(VAD_DATA));
   // if (vad_data == NULL) {                                              -> not sure
   //   fprintf(stderr, "Error: Memory allocation failed in vad_open\n");
@@ -65,7 +65,7 @@ VAD_DATA * vad_open(float rate) {
   vad_data->sampling_rate = rate;
   vad_data->frame_length = rate * FRAME_TIME * 1e-3;
   vad_data->min_s = 14;
-  vad_data->min_v = 5;
+  vad_data->min_v = 4;
   return vad_data;
 }
 
@@ -88,7 +88,7 @@ unsigned int vad_frame_size(VAD_DATA *vad_data) {
  * using a Finite State Automata
  */
 
-VAD_STATE vad(VAD_DATA *vad_data, float *x/*, float alpha1*/) {
+VAD_STATE vad(VAD_DATA *vad_data, float *x, float alpha1) {
 
   /* 
    * TODO: You can change this, using your own features,
@@ -99,45 +99,38 @@ VAD_STATE vad(VAD_DATA *vad_data, float *x/*, float alpha1*/) {
   vad_data->last_feature = f.p; // save feature, in case you want to show 
   VAD_STATE actual_state = vad_data->state;
 
+  if (n < 10) {
+    vad_data->k0 = (vad_data->k0 * n + f.p) / (n + 1);
+    vad_data->k1 = vad_data->k0 + 9.9;
+    n++;
+  }
+
   switch (vad_data->state) {
   case ST_INIT:
-    vad_data->k0 = f.p;
-    vad_data->k1 = vad_data->k0 + 9.9;
+    // vad_data->k0 = f.p;
+    // vad_data->k1 = vad_data->k0 + 9.9;
     vad_data->state = ST_SILENCE;
 
   case ST_SILENCE:
-    // if (long_state < 5 && initial == 0) {
-    //   vad_data->k0 += f.p;
-    //   if (long_state == 4) {
-    //     vad_data->k0 /= 5;
-    //     vad_data->k1 = vad_data->k0 + 5;
-    //     initial = 1;
-    //   }
-    // } 
     if (f.p > vad_data->k1) {
       vad_data->state = ST_MAYBE_VOICE;
-      // if (initial == 0) {
-      //   vad_data->k0 /= long_state+1;
-      //   vad_data->k1 = vad_data->k0 + 5;
-      //   initial = 1;
-      // }
     }
     break;
 
   case ST_MAYBE_VOICE:
     if (f.p > vad_data->k1 && long_state > vad_data->min_v)
       vad_data->state = ST_VOICE;
-    else if (f.p < vad_data->k1-5.9)
+    else if (f.p < vad_data->k1-6)
       vad_data->state = ST_SILENCE;
     break;
 
   case ST_VOICE:
-    if (f.p < vad_data->k1-5.9)
+    if (f.p < vad_data->k1-6)
       vad_data->state = ST_MAYBE_SILENCE;
     break;
 
   case ST_MAYBE_SILENCE:
-    if (f.p < vad_data->k1-5.9 && long_state > vad_data->min_s)
+    if (f.p < vad_data->k1-6 && long_state > vad_data->min_s)
       vad_data->state = ST_SILENCE;
     else if (f.p > vad_data->k1)
       vad_data->state = ST_VOICE;
