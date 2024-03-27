@@ -20,10 +20,10 @@ int main(int argc, char *argv[]) {
   VAD_DATA *vad_data;
   VAD_STATE state, last_state, pre_maybe_state;
 
-  float *buffer, *buffer_zeros;
+  float *buffer, *buffer_zeros, *buffer_zeros_extended;
   int frame_size;         /* in samples */
   float frame_duration;   /* in seconds */
-  unsigned int t, last_t, maybe_t; /* in frames */
+  unsigned int t, last_t, maybe_t, last_t_in_0 = 0; /* in frames */
   float alpha1;
 
   char	*input_wav, *output_vad, *output_wav;
@@ -72,6 +72,8 @@ int main(int argc, char *argv[]) {
   buffer       = (float *) malloc(frame_size * sizeof(float));
   buffer_zeros = (float *) malloc(frame_size * sizeof(float));
   for (i=0; i< frame_size; ++i) buffer_zeros[i] = 0.0F;
+  buffer_zeros_extended = (float *)malloc(frame_size * 15 * sizeof(float));
+  for(i=0; i<frame_size*15;++i) buffer_zeros_extended[i] = 0.0F;
 
   frame_duration = (float) frame_size/ (float) sf_info.samplerate;
   last_state = ST_INIT;
@@ -98,6 +100,7 @@ int main(int argc, char *argv[]) {
       if(pre_maybe_state != state){
         fprintf(vadfile, "%.5f\t%.5f\t%s\n", last_t * frame_duration, maybe_t * frame_duration, state2str(pre_maybe_state));
         last_t = maybe_t;
+        if(state == ST_SILENCE) last_t_in_0 = maybe_t;
       }
     }
 
@@ -113,13 +116,16 @@ int main(int argc, char *argv[]) {
     if (sndfile_out != 0) {
       /* TODO: go back and write zeros in silence segments */
       if (state == ST_SILENCE) {
-        int silence_frames = t - last_t; // Number of frames in the silence segment
+        int silence_frames = t - last_t_in_0;
         int silence_samples = silence_frames * frame_size; // Number of samples in the silence segment
-        fseek(sndfile_out, last_t * frame_size * sizeof(float), SEEK_SET); // Seek to the start of the silence segment
-        float *zeros_buffer = (float *)malloc(silence_samples * sizeof(float));
-        memset(zeros_buffer, 0, silence_samples * sizeof(float)); // Fill the buffer with zeros
-        sf_write_float(sndfile_out, zeros_buffer, silence_samples); // Write zeros to the file
-        free(zeros_buffer);
+        sf_seek(sndfile_out, last_t_in_0 * frame_size, SEEK_SET); // Seek to the start of the silence segment
+        last_t_in_0 = t;
+        if(silence_frames == 1){
+          sf_write_float(sndfile_out, buffer_zeros, silence_samples); // Write zeros to the file
+        } else {
+          sf_write_float(sndfile_out, buffer_zeros_extended, silence_samples); // Write zeros to the file
+        }
+        sf_seek(sndfile_out, t * frame_size, SEEK_SET); // Seek to where the signal is
       }
     }
     last_state = state;
