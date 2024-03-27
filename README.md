@@ -1,8 +1,6 @@
 PAV - P2: detección de actividad vocal (VAD)
 ============================================
 
-hola mundo 
-
 Esta práctica se distribuye a través del repositorio GitHub [Práctica 2](https://github.com/albino-pav/P2),
 y una parte de su gestión se realizará mediante esta web de trabajo colaborativo.  Al contrario que Git,
 GitHub se gestiona completamente desde un entorno gráfico bastante intuitivo. Además, está razonablemente
@@ -138,15 +136,41 @@ Ejercicios
   continuación, una captura de `wavesurfer` en la que se vea con claridad la señal temporal, el contorno de
   potencia y la tasa de cruces por cero, junto con el etiquetado manual de los segmentos.
 
+<p align="center">
+  <img src="./documentation/image.png" alt="Labeled signal" width="500" /><br />
+  Figure 1: Labeled signal
+</p>
+
+	Gráfica roja es el contorno de la potencia.
+	Gráfica verde es la tasa de cruces por cero.
 
 - A la vista de la gráfica, indique qué valores considera adecuados para las magnitudes siguientes:
 
 	* Incremento del nivel potencia en dB, respecto al nivel correspondiente al silencio inicial, para
 	  estar seguros de que un segmento de señal se corresponde con voz.
 
+	  Nosotros el nivel corespondiente al silencio inicial lo promediamos con las primeras muestras. Además,
+	  para luego detectar silencio le restamos otro número para asegurar que es silencio. Sabiendo esto, 
+	  y estimando un valor inicial medio entre -70 y -80 (debido a que hay mucho tiempo en -80) y viendo que
+	  observando que el límite superior del silencio está alrededor de los -60, el incremento ideal sería
+	  de unos 20 dB.
+
 	* Duración mínima razonable de los segmentos de voz y silencio.
 
+	  Para calcular la duración mínima razonable de los segmentos de voz y silencio hay que tner en cuenta que
+	  que el tiempo mínimo para detectar silencio es mayor que el tiempo mínimo para detectar voz. Esto es debido
+	  a que hay que asegurar el no perder fragmentos de voz, además que al hablar hay pausas entre palabras con potencia 
+	  al nivel de la del silencio, pero hay que esperar por si se trata solo de un espacio entre palabras y no silencio.
+	  Sabiendo esto, la duración mínima para detectar la voz puede ser alrededor de 5 fragmentos, porque como vemos, 
+	  cuando la potencia sube la mayoría de las veces es voz, pocas veces es un ruido. Por otro lado, la duración mínima
+	  para detectar silencio deberia rondar los 15 fragmentos debido a que hay espacio entre palabras relativamente largos
+	  pero que se tienen que seguir detectando como voz.
+
 	* ¿Es capaz de sacar alguna conclusión a partir de la evolución de la tasa de cruces por cero?
+
+	  Sí, vemos que cuando la potencia es baja y se podría interpretar que es silencio, vemos que si realmente es voz, la tasa
+	  de cruces por cero será alta. De esta manera si dudamos con la potencia sobre en que estado estamos, los cruces por cero 
+	  nos sacan de dudas.
 
 
 ### Desarrollo del detector de actividad vocal
@@ -177,6 +201,10 @@ Ejercicios
 - Si ha usado `docopt_c` para realizar la gestión de las opciones y argumentos del programa `vad`, inserte
   una captura de pantalla en la que se vea el mensaje de ayuda del programa.
 
+<p align="center">
+  <img src="./documentation/help_message.png" alt="Help message" width="500" /><br />
+  Figure 2: Help message
+</p>
 
 ### Contribuciones adicionales y/o comentarios acerca de la práctica
 
