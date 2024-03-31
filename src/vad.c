@@ -99,16 +99,17 @@ VAD_STATE vad(VAD_DATA *vad_data, float *x, float alpha1) {
   vad_data->last_feature = f.p; // save feature, in case you want to show 
   VAD_STATE actual_state = vad_data->state;
 
+  // Compute the average of power of the first 10 frames
+  // Find k1 and k2, the thresholds for voice and silence
   if (n < 10) {
     vad_data->k0 = (vad_data->k0 * n + f.p) / (n + 1);
     vad_data->k1 = vad_data->k0 + 9.9;
+    vad_data->k2 = vad_data->k1 - 6;
     n++;
   }
 
   switch (vad_data->state) {
   case ST_INIT:
-    // vad_data->k0 = f.p;
-    // vad_data->k1 = vad_data->k0 + 9.9;
     vad_data->state = ST_SILENCE;
 
   case ST_SILENCE:
@@ -120,17 +121,17 @@ VAD_STATE vad(VAD_DATA *vad_data, float *x, float alpha1) {
   case ST_MAYBE_VOICE:
     if (f.p > vad_data->k1 && long_state > vad_data->min_v)
       vad_data->state = ST_VOICE;
-    else if (f.p < vad_data->k1-6)
+    else if (f.p < vad_data->k2)
       vad_data->state = ST_SILENCE;
     break;
 
   case ST_VOICE:
-    if (f.p < vad_data->k1-6)
+    if (f.p < vad_data->k2)
       vad_data->state = ST_MAYBE_SILENCE;
     break;
 
   case ST_MAYBE_SILENCE:
-    if (f.p < vad_data->k1-6 && long_state > vad_data->min_s)
+    if (f.p < vad_data->k2 && long_state > vad_data->min_s)
       vad_data->state = ST_SILENCE;
     else if (f.p > vad_data->k1)
       vad_data->state = ST_VOICE;

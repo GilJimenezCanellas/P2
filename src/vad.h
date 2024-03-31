@@ -16,7 +16,7 @@ typedef struct {
   float sampling_rate;
   unsigned int frame_length;
   float last_feature; /* for debuggin purposes */
-  float k0, k1; //thresholds 0 and 1
+  float k0, k1, k2; //thresholds 0, 1 and 2
   unsigned int min_s, min_v; // minimum samples to be silence or voice
 } VAD_DATA;
 
