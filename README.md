@@ -155,11 +155,11 @@ Ejercicios
 
 	* Duración mínima razonable de los segmentos de voz y silencio.
 
-	  Para definir una duración mínima razonable de los segmentos de voz y silencio, vamos a considerar que el tiempo mínimo para detectar silencio es mayor que el tiempo mínimo para detectar voz. Esto es debido a dos motivos: primero, no queremos perder ninguú fragmento de voz, y segundo, cuando hablamos hacemos pausas, estas no se pueden detectar como silencio. En canvio, cuando la potencia está por encima del umbral, en la gran mayoría de casos se trata de voz, por eso la duración mínima de voz será menor. Visualizando la gráfica, podemos definir la duración mínima para detectar la voz con unas 5 tramas, y la duración mínima para detectar silencio de unas 15 tramas.
+	  Para definir una duración mínima razonable de los segmentos de voz y silencio, vamos a considerar que el tiempo mínimo para detectar silencio es mayor que el tiempo mínimo para detectar voz. Esto es debido a dos motivos: primero, no queremos perder ningún fragmento de voz, y segundo, cuando hablamos hacemos pausas, estas no se pueden detectar como silencio. En canvio, cuando la potencia está por encima del umbral, en la gran mayoría de casos se trata de voz, por eso la duración mínima de voz será menor. Visualizando la gráfica, podemos definir la duración mínima para detectar la voz con unas 5 tramas, y la duración mínima para detectar silencio de unas 15 tramas.
 
 	* ¿Es capaz de sacar alguna conclusión a partir de la evolución de la tasa de cruces por cero?
 
-	  Sí, se puede ver que en casos de voz donde la potencia media es baja la tasa de cruces por cero es alta. Esto es debido a que en las señales de voz sordas, a diferencia de las senyales de voz sonoras, la señal no es periódica. De hecho, es prácticamente aleatoria, y por eso, la tasa de cruces por cero es tan elevada. De aquí podriamos sacar la conclusión que en casos de potencia baja y tcpc alta podremos calificar de voz.
+	  Sí, se puede ver que en casos de voz donde la potencia media es baja la tasa de cruces por cero es alta. Esto es debido a que en las señales de voz sordas, a diferencia de las señales de voz sonoras, la señal no es periódica. De hecho, es prácticamente aleatoria, y por eso, la tasa de cruces por cero es tan elevada. De aquí podriamos sacar la conclusión que en casos de potencia baja y tcpc alta podremos calificar de voz.
 
 
 ### Desarrollo del detector de actividad vocal
@@ -245,7 +245,7 @@ En esta imagen podemos ver las medidas estadísticas de la señal corregida. Se 
 - Si lo desea, puede realizar también algún comentario acerca de la realización de la práctica que
   considere de interés de cara a su evaluación.
 
-Hemos encontrado la práctica muy interessante, nos ha permitido entender mejor el uso de docopt_c, meson, el manejo de ficheros de texto con C y de audio con wavesurfer y soundfile.
+Hemos encontrado la práctica muy interesante, nos ha permitido entender mejor el uso de docopt_c, meson, el manejo de ficheros de texto con C y de audio con wavesurfer y soundfile.
 
 
 ### Antes de entregar la práctica
